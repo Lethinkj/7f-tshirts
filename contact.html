@@ -1,0 +1,200 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7F Tshirt - Contact</title>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Open+Sans&display=swap');
+    body { margin: 0; font-family: 'Poppins', sans-serif; color: #A1A1A1; /* Mild Gray */ }
+    .secondary-font { font-family: 'Open Sans', sans-serif; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+    nav {
+      background-color: #000000; /* Jet Black */
+      color: #FFFFFF; /* Pure White */
+      padding: 16px 0;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    nav .container { display: flex; justify-content: space-between; align-items: center; }
+    nav .logo { font-size: 24px; font-weight: 700; transition: transform 0.3s; }
+    nav .logo:hover { transform: scale(1.05); }
+    nav .nav-links a {
+      color: #FFFFFF;
+      text-decoration: none;
+      margin-left: 16px;
+      font-size: 16px;
+      position: relative;
+      transition: color 0.3s;
+    }
+    nav .nav-links a::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -2px;
+      left: 0;
+      background-color: #FF0000; /* Accent Red */
+      transition: width 0.3s;
+    }
+    nav .nav-links a:hover { color: #FF0000; }
+    nav .nav-links a:hover::after { width: 100%; }
+    section {
+      min-height: 100vh;
+      padding: 48px 0;
+      text-align: center;
+      background-color: #FFFFFF; /* Pure White */
+    }
+    section h2 {
+      font-size: 48px;
+      font-weight: 700;
+      color: #000000; /* Jet Black */
+      margin-bottom: 24px;
+      animation: fadeIn 1s ease-in;
+    }
+    section p {
+      font-size: 18px;
+      color: #A1A1A1; /* Mild Gray */
+      max-width: 640px;
+      margin: 0 auto 32px;
+      animation: fadeIn 1s ease-in 0.2s;
+    }
+    .contact-form {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .contact-form input,
+    .contact-form textarea {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 16px;
+      border: 1px solid #D3D3D3;
+      border-radius: 4px;
+      font-size: 16px;
+      font-family: 'Open Sans', sans-serif;
+    }
+    .contact-form textarea {
+      height: 128px;
+      resize: vertical;
+    }
+    .contact-form button {
+      background-color: #FF0000; /* Accent Red */
+      color: #FFFFFF;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    .contact-form button:hover {
+      background-color: #CC0000; /* Darker Red */
+      transform: scale(1.05);
+    }
+    footer {
+      background-color: #000000; /* Jet Black */
+      color: #FFFFFF;
+      text-align: center;
+      padding: 16px 0;
+    }
+    footer p { margin: 0; font-size: 14px; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (min-width: 768px) {
+      section h2 { font-size: 64px; }
+      section p { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+    const Navbar = () => (
+      <nav>
+        <div className="container">
+          <div className="logo">7F Tshirt</div>
+          <div className="nav-links">
+            {['Home', 'Polo', 'Crewneck', 'Oversized', 'About', 'Contact', 'Blog'].map((item) => (
+              <a key={item} href={item === 'Home' ? 'home.html' : `${item.toLowerCase()}.html`}>{item}</a>
+            ))}
+          </div>
+        </div>
+      </nav>
+    );
+    const Contact = () => (
+      <section id="contact">
+        <div className="container">
+          <h2>Contact Us</h2>
+          <p className="secondary-font">
+            Have questions about 7F Tshirt’s collections? Reach out to us, and we’ll get back to you promptly.
+          </p>
+          <form className="contact-form">
+            <input type="text" placeholder="Your Name" required />
+            <input type="email" placeholder="Your Email" required />
+            <textarea placeholder="Your Message" required></textarea>
+            <button type="submit">Send Message</button>
+          </form>
+        </div>
+      </section>
+    );
+    const App = () => (
+      <div>
+        <Navbar />
+        <Contact />
+        <footer>
+          <p>&copy; 2025 7F Tshirt. All rights reserved.</p>
+        </footer>
+      </div>
+    );
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

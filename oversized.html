@@ -1,0 +1,350 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7F Tshirt - Oversized T-Shirts</title>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Open+Sans&display=swap');
+    body { margin: 0; font-family: 'Poppins', sans-serif; color: #A1A1A1; /* Mild Gray */ }
+    .secondary-font { font-family: 'Open Sans', sans-serif; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+    nav {
+      background-color: #000000; /* Jet Black */
+      color: #FFFFFF; /* Pure White */
+      padding: 16px 0;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    nav .container { display: flex; justify-content: space-between; align-items: center; }
+    nav .logo { font-size: 24px; font-weight: 700; transition: transform 0.3s; }
+    nav .logo:hover { transform: scale(1.05); }
+    nav .nav-links a {
+      color: #FFFFFF;
+      text-decoration: none;
+      margin-left: 16px;
+      font-size: 16px;
+      position: relative;
+      transition: color 0.3s;
+    }
+    nav .nav-links a::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -2px;
+      left: 0;
+      background-color: #FF0000; /* Accent Red */
+      transition: width 0.3s;
+    }
+    nav .nav-links a:hover { color: #FF0000; }
+    nav .nav-links a:hover::after { width: 100%; }
+    section {
+      min-height: 100vh;
+      padding: 48px 0;
+      text-align: center;
+      background-color: #FFFFFF; /* Pure White */
+    }
+    section h2 {
+      font-size: 48px;
+      font-weight: 700;
+      color: #000000; /* Jet Black */
+      margin-bottom: 24px;
+      animation: fadeIn 1s ease-in;
+    }
+    section p {
+      font-size: 18px;
+      color: #A1A1A1; /* Mild Gray */
+      max-width: 640px;
+      margin: 0 auto 32px;
+      animation: fadeIn 1s ease-in 0.2s;
+    }
+    section .cta-button {
+      background-color: #FF0000; /* Accent Red */
+      color: #FFFFFF;
+      padding: 12px 24px;
+      border-radius: 9999px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 16px;
+      transition: background-color 0.3s, transform 0.3s;
+      animation: fadeIn 1s ease-in 0.4s;
+    }
+    section .cta-button:hover {
+      background-color: #CC0000; /* Darker Red */
+      transform: scale(1.05);
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    .product-card {
+      background-color: #F5F5F5; /* Light Gray */
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      animation: slideUp 0.5s ease-in;
+    }
+    .product-card .image-placeholder {
+      height: 192px;
+      background-color: #D3D3D3; /* Gray placeholder */
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    .product-card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #000000; /* Jet Black */
+      margin-bottom: 8px;
+    }
+    .product-card p {
+      font-size: 16px;
+      color: #A1A1A1; /* Mild Gray */
+      margin-bottom: 16px;
+    }
+    .product-card input {
+      width: 80px;
+      padding: 4px;
+      margin-right: 8px;
+      border: 1px solid #D3D3D3;
+      border-radius: 4px;
+    }
+    .product-card button {
+      background-color: #FF0000; /* Accent Red */
+      color: #FFFFFF;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.3s;
+      margin: 4px;
+    }
+    .product-card button:hover {
+      background-color: #CC0000; /* Darker Red */
+      transform: scale(1.05);
+    }
+    .add-form {
+      max-width: 500px;
+      margin: 0 auto 32px;
+    }
+    .add-form input, .add-form textarea {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 16px;
+      border: 1px solid #D3D3D3;
+      border-radius: 4px;
+      font-size: 16px;
+      font-family: 'Open Sans', sans-serif;
+    }
+    .add-form textarea {
+      height: 80px;
+      resize: vertical;
+    }
+    .add-form button {
+      background-color: #FF0000; /* Accent Red */
+      color: #FFFFFF;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    .add-form button:hover {
+      background-color: #CC0000; /* Darker Red */
+      transform: scale(1.05);
+    }
+    footer {
+      background-color: #000000; /* Jet Black */
+      color: #FFFFFF;
+      text-align: center;
+      padding: 16px 0;
+    }
+    footer p { margin: 0; font-size: 14px; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(50px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (min-width: 768px) {
+      section h2 { font-size: 64px; }
+      section p { font-size: 20px; }
+      .product-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1024px) {
+      .product-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect } = React;
+    const Navbar = () => (
+      <nav>
+        <div className="container">
+          <div className="logo">7F Tshirt</div>
+          <div className="nav-links">
+            {['Home', 'Polo', 'Crewneck', 'Oversized', 'About', 'Contact', 'Blog'].map((item) => (
+              <a key={item} href={item === 'Home' ? 'home.html' : `${item.toLowerCase()}.html`}>{item}</a>
+            ))}
+          </div>
+        </div>
+      </nav>
+    );
+    const Oversized = () => {
+      const [products, setProducts] = useState([]);
+      const [newProduct, setNewProduct] = useState({ name: '', price: '', quantity: '', desc: '' });
+
+      useEffect(() => {
+        const storedProducts = JSON.parse(localStorage.getItem('oversizedProducts')) || [];
+        setProducts(storedProducts);
+      }, []);
+
+      const saveProducts = (updatedProducts) => {
+        localStorage.setItem('oversizedProducts', JSON.stringify(updatedProducts));
+        setProducts(updatedProducts);
+      };
+
+      const handleAdd = () => {
+        if (newProduct.name && newProduct.price && newProduct.quantity && newProduct.desc) {
+          const updatedProducts = [...products, { ...newProduct, id: Date.now() }];
+          saveProducts(updatedProducts);
+          setNewProduct({ name: '', price: '', quantity: '', desc: '' });
+        }
+      };
+
+      const handleUpdate = (id, field, value) => {
+        const updatedProducts = products.map((product) =>
+          product.id === id ? { ...product, [field]: value } : product
+        );
+        saveProducts(updatedProducts);
+      };
+
+      const handleDelete = (id) => {
+        const updatedProducts = products.filter((product) => product.id !== id);
+        saveProducts(updatedProducts);
+      };
+
+      return (
+        <section id="oversized">
+          <div className="container">
+            <h2>Oversized T-Shirts</h2>
+            <p className="secondary-font">
+              Make a statement with 7F Tshirt’s Oversized T-shirts, designed for bold style and relaxed comfort.
+            </p>
+            <div className="add-form">
+              <h3>Add New Product</h3>
+              <input
+                type="text"
+                placeholder="Product Name"
+                value={newProduct.name}
+                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+              />
+              <input
+                type="number"
+                placeholder="Price (e.g., 34.99)"
+                value={newProduct.price}
+                onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+              />
+              <input
+                type="number"
+                placeholder="Quantity Available"
+                value={newProduct.quantity}
+                onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
+              />
+              <textarea
+                placeholder="Description"
+                value={newProduct.desc}
+                onChange={(e) => setNewProduct({ ...newProduct, desc: e.target.value })}
+              />
+              <button onClick={handleAdd}>Add Product</button>
+            </div>
+            <div className="product-grid">
+              {products.length === 0 ? (
+                <p className="secondary-font">No products added yet. Use the form above to add.</p>
+              ) : (
+                products.map((item) => (
+                  <div key={item.id} className="product-card">
+                    <div className="image-placeholder"></div>
+                    <h3>{item.name}</h3>
+                    <p className="secondary-font">Price: <input type="number" value={item.price} onChange={(e) => handleUpdate(item.id, 'price', e.target.value)} /></p>
+                    <p className="secondary-font">Quantity: <input type="number" value={item.quantity} onChange={(e) => handleUpdate(item.id, 'quantity', e.target.value)} /></p>
+                    <p className="secondary-font">{item.desc}</p>
+                    <button onClick={() => handleDelete(item.id)}>Delete</button>
+                    <a href="#">Add to Cart</a>
+                  </div>
+                ))
+              )}
+            </div>
+            <a href="oversized.html" className="cta-button">Shop All Oversized</a>
+          </div>
+        </section>
+      );
+    };
+    const App = () => (
+      <div>
+        <Navbar />
+        <Oversized />
+        <footer>
+          <p>&copy; 2025 7F Tshirt. All rights reserved.</p>
+        </footer>
+      </div>
+    );
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

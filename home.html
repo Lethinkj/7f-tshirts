@@ -1,0 +1,405 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7F Tshirt - Home</title>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Open+Sans&display=swap');
+    body { margin: 0; font-family: 'Poppins', sans-serif; color: #A1A1A1; /* Mild Gray */ }
+    .secondary-font { font-family: 'Open Sans', sans-serif; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+    nav {
+      background-color: #000000; /* Jet Black */
+      color: #FFFFFF; /* Pure White */
+      padding: 16px 0;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    nav .container { display: flex; justify-content: space-between; align-items: center; }
+    nav .logo { font-size: 24px; font-weight: 700; transition: transform 0.3s; }
+    nav .logo:hover { transform: scale(1.05); }
+    nav .nav-links a {
+      color: #FFFFFF;
+      text-decoration: none;
+      margin-left: 16px;
+      font-size: 16px;
+      position: relative;
+      transition: color 0.3s;
+    }
+    nav .nav-links a::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -2px;
+      left: 0;
+      background-color: #FF0000; /* Accent Red */
+      transition: width 0.3s;
+    }
+    nav .nav-links a:hover { color: #FF0000; }
+    nav .nav-links a:hover::after { width: 100%; }
+    .carousel {
+      position: relative;
+      width: 100%;
+      height: 500px;
+      overflow: hidden;
+    }
+    .carousel-slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+    .carousel-slide.active { opacity: 1; }
+    .carousel-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(70%);
+    }
+    .carousel-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #FFFFFF;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      animation: fadeIn 1s ease-in;
+    }
+    .carousel-text h2 {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .carousel-text p {
+      font-size: 18px;
+      max-width: 600px;
+      margin: 0 auto 24px;
+    }
+    .carousel-text a {
+      background-color: #FF0000; /* Accent Red */
+      color: #FFFFFF;
+      padding: 12px 24px;
+      border-radius: 9999px;
+      text-decoration: none;
+      font-weight: 700;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    .carousel-text a:hover {
+      background-color: #CC0000; /* Darker Red */
+      transform: scale(1.05);
+    }
+    .carousel-nav {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+    }
+    .carousel-dot {
+      width: 12px;
+      height: 12px;
+      background-color: #FFFFFF;
+      opacity: 0.5;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: opacity 0.3s;
+    }
+    .carousel-dot.active { opacity: 1; }
+    .carousel-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 24px;
+      color: #FFFFFF;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 8px;
+      cursor: pointer;
+      border-radius: 50%;
+      transition: background-color 0.3s;
+    }
+    .carousel-arrow:hover { background-color: rgba(0, 0, 0, 0.7); }
+    .carousel-arrow.left { left: 16px; }
+    .carousel-arrow.right { right: 16px; }
+    #home {
+      min-height: calc(100vh - 500px);
+      background-color: #FFFFFF; /* Pure White */
+      padding: 48px 0;
+      text-align: center;
+    }
+    #home h1 {
+      font-size: 48px;
+      font-weight: 700;
+      color: #000000; /* Jet Black */
+      margin-bottom: 24px;
+      animation: fadeIn 1s ease-in;
+    }
+    #home p {
+      font-size: 18px;
+      color: #A1A1A1; /* Mild Gray */
+      max-width: 640px;
+      margin: 0 auto 32px;
+      animation: fadeIn 1s ease-in 0.2s;
+    }
+    #home .cta-button {
+      background-color: #FF0000; /* Accent Red */
+      color: #FFFFFF;
+      padding: 12px 24px;
+      border-radius: 9999px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 16px;
+      transition: background-color 0.3s, transform 0.3s;
+      animation: fadeIn 1s ease-in 0.4s;
+    }
+    #home .cta-button:hover {
+      background-color: #CC0000; /* Darker Red */
+      transform: scale(1.05);
+    }
+    .category-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    .category-card {
+      background-color: #F5F5F5; /* Light Gray */
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      animation: slideUp 0.5s ease-in;
+    }
+    .category-card .image-placeholder {
+      height: 192px;
+      background-color: #D3D3D3; /* Gray placeholder */
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    .category-card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #000000; /* Jet Black */
+      margin-bottom: 8px;
+    }
+    .category-card p {
+      font-size: 16px;
+      color: #A1A1A1; /* Mild Gray */
+      margin-bottom: 16px;
+    }
+    .category-card a {
+      background-color: #FF0000; /* Accent Red */
+      color: #FFFFFF;
+      padding: 8px 16px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 14px;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+    .category-card a:hover {
+      background-color: #CC0000; /* Darker Red */
+      transform: scale(1.05);
+    }
+    footer {
+      background-color: #000000; /* Jet Black */
+      color: #FFFFFF;
+      text-align: center;
+      padding: 16px 0;
+    }
+    footer p { margin: 0; font-size: 14px; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(50px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (min-width: 768px) {
+      .carousel-text h2 { font-size: 48px; }
+      .carousel-text p { font-size: 20px; }
+      #home h1 { font-size: 64px; }
+      #home p { font-size: 20px; }
+      .category-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect } = React;
+    class ErrorBoundary extends React.Component {
+      state = { error: null };
+      static getDerivedStateFromError(error) {
+        return { error: error.message };
+      }
+      render() {
+        if (this.state.error) {
+          return <div style={{ color: '#FF0000', textAlign: 'center', padding: '16px' }}>
+            Error: {this.state.error}
+          </div>;
+        }
+        return this.props.children;
+      }
+    }
+    const Carousel = () => {
+      const [currentSlide, setCurrentSlide] = useState(0);
+      const slides = [
+        {
+          image: 'https://via.placeholder.com/1200x500?text=Polo+T-Shirt',
+          title: 'Polo T-Shirts',
+          text: '7F Tshirt’s Polo collection offers timeless elegance and comfort for any occasion.',
+          link: 'polo.html'
+        },
+        {
+          image: 'https://via.placeholder.com/1200x500?text=Crewneck+T-Shirt',
+          title: 'Crewneck T-Shirts',
+          text: 'Discover 7F Tshirt’s Crewneck T-shirts, crafted for everyday style and versatility.',
+          link: 'crewneck.html'
+        },
+        {
+          image: 'https://via.placeholder.com/1200x500?text=Oversized+T-Shirt',
+          title: 'Oversized T-Shirts',
+          text: 'Make a bold statement with 7F Tshirt’s Oversized T-shirts, designed for trendsetting comfort.',
+          link: 'oversized.html'
+        }
+      ];
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setCurrentSlide((prev) => (prev + 1) % slides.length);
+        }, 5000);
+        return () => clearInterval(interval);
+      }, []);
+      const goToSlide = (index) => setCurrentSlide(index);
+      const goPrev = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+      const goNext = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
+      return (
+        <div className="carousel">
+          {slides.map((slide, index) => (
+            <div key={index} className={`carousel-slide ${index === currentSlide ? 'active' : ''}`}>
+              <img src={slide.image} alt={slide.title} />
+              <div className="carousel-text">
+                <h2>{slide.title}</h2>
+                <p className="secondary-font">{slide.text}</p>
+                <a href={slide.link}>Shop Now</a>
+              </div>
+            </div>
+          ))}
+          <div className="carousel-nav">
+            {slides.map((_, index) => (
+              <div
+                key={index}
+                className={`carousel-dot ${index === currentSlide ? 'active' : ''}`}
+                onClick={() => goToSlide(index)}
+              ></div>
+            ))}
+          </div>
+          <div className="carousel-arrow left" onClick={goPrev}>&larr;</div>
+          <div className="carousel-arrow right" onClick={goNext}>&rarr;</div>
+        </div>
+      );
+    };
+    const Navbar = () => (
+      <nav>
+        <div className="container">
+          <div className="logo">7F Tshirt</div>
+          <div className="nav-links">
+            {['Home', 'Polo', 'Crewneck', 'Oversized', 'About', 'Contact', 'Blog'].map((item) => (
+              <a key={item} href={item === 'Home' ? 'home.html' : `${item.toLowerCase()}.html`}>{item}</a>
+            ))}
+          </div>
+        </div>
+      </nav>
+    );
+    const Home = () => (
+      <section id="home">
+        <Carousel />
+        <div className="container">
+          <h1>Welcome to 7F Tshirt</h1>
+          <p className="secondary-font">
+            Explore our premium collection of Polo, Crewneck, and Oversized T-shirts crafted for style, comfort, and versatility.
+          </p>
+          <div className="category-grid">
+            {[
+              { name: 'Polo T-Shirts', desc: 'Classic and sophisticated for any occasion.', link: 'polo.html' },
+              { name: 'Crewneck T-Shirts', desc: 'Comfortable and timeless wardrobe essentials.', link: 'crewneck.html' },
+              { name: 'Oversized T-Shirts', desc: 'Bold and relaxed for a trendy look.', link: 'oversized.html' }
+            ].map((item) => (
+              <div key={item.name} className="category-card">
+                <div className="image-placeholder"></div>
+                <h3>{item.name}</h3>
+                <p className="secondary-font">{item.desc}</p>
+                <a href={item.link}>Shop {item.name}</a>
+              </div>
+            ))}
+          </div>
+          <a href="polo.html" className="cta-button">Start Shopping</a>
+        </div>
+      </section>
+    );
+    const App = () => (
+      <ErrorBoundary>
+        <div>
+          <Navbar />
+          <Home />
+          <footer>
+            <p>&copy; 2025 7F Tshirt. All rights reserved.</p>
+          </footer>
+        </div>
+      </ErrorBoundary>
+    );
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
